@@ -6,15 +6,15 @@ from typing import TypeVar, Generic, Any
 Node = TypeVar('Node')
 
 
-class Cograph(ABC, Generic[Node]):
+class Cotree(ABC, Generic[Node]):
     @abstractmethod
     def __repr__(self) -> str: ...
 
-    def __mul__(self, other: Cograph[Node]) -> Cograph[Node]: return Product(self, other)
-    def __add__(self, other: Cograph[Node]) -> Cograph[Node]: return Coproduct(self, other)
+    def __mul__(self, other: Cotree[Node]) -> Cotree[Node]: return Product(self, other)
+    def __add__(self, other: Cotree[Node]) -> Cotree[Node]: return Coproduct(self, other)
 
 
-class Unit(Cograph[Node]):
+class Unit(Cotree[Node]):
     __match_args__ = ('content',)
     content: Node
 
@@ -26,11 +26,11 @@ class Unit(Cograph[Node]):
     def __hash__(self) -> int: return hash(self.content)
 
 
-class Product(Cograph[Node]):
+class Product(Cotree[Node]):
     __match_args__ = ('operands',)
-    operands: tuple[Cograph, ...]
+    operands: tuple[Cotree, ...]
 
-    def __init__(self, *operands: Cograph):
+    def __init__(self, *operands: Cotree):
         if len(operands) <= 1:
             raise ValueError('A product must have at least two operands.')
         self.operands = sum(
@@ -40,11 +40,11 @@ class Product(Cograph[Node]):
     def __repr__(self) -> str: return '⨂'.join(map(show, (a for a in self.operands)))
 
 
-class Coproduct(Cograph[Node]):
+class Coproduct(Cotree[Node]):
     __match_args__ = ('operands',)
-    operands: tuple[Cograph, ...]
+    operands: tuple[Cotree, ...]
 
-    def __init__(self, *operands: Cograph):
+    def __init__(self, *operands: Cotree):
         if len(operands) <= 1:
             raise ValueError('A coproduct must have at least two operands.')
         self.operands = sum(
@@ -54,12 +54,12 @@ class Coproduct(Cograph[Node]):
     def __repr__(self) -> str: return '⨁'.join(map(show, (a for a in self.operands)))
 
 
-def flatten(x: Cograph) -> tuple[Cograph, ...]:
+def flatten(x: Cotree) -> tuple[Cotree, ...]:
     match x:
         case Unit(_): return (x,)
         case Product(operands) | Coproduct(operands): return operands
         case _: raise ValueError
 
 
-def show(x: Cograph) -> str:
+def show(x: Cotree) -> str:
     return repr(x) if isinstance(x, Unit) else f'({repr(x)})'
